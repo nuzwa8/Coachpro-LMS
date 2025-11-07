@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * Plugin Name:       My Custom GPTs
  * Plugin URI:        https://coachproai.com
@@ -661,8 +661,6 @@ function cpg_render_shortcode( $atts ) {
     </template>
     <?php
 
-    // Return the buffered HTML
+// Return the buffered HTML
     return ob_get_clean();
 }
-
-// No closing ?> tag is needed in PHP files that are purely code.
