@@ -368,4 +368,298 @@ function cpg_public_enqueue_assets() {
 // We use 'wp_enqueue_scripts' for the front-end
 add_action( 'wp_enqueue_scripts', 'cpg_public_enqueue_assets' );
 
+/**
+ * Part 4 — Admin AJAX Handlers (CRUD Operations)
+ * * This part defines all the backend functions that respond to
+ * (AJAX) requests from the admin JavaScript.
+ * * This includes fetching, saving (create/update), and deleting GPTs.
+ * * Security is enforced with nonces and capability checks.
+ */
+
+/**
+ * AJAX Handler: Get all GPTs
+ * Fetches all GPTs from the database.
+ */
+function cpg_ajax_get_gpts() {
+    // 1. Security Check
+    check_ajax_referer( 'cpg_admin_nonce', 'nonce' );
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Permission denied.', CPG_TEXT_DOMAIN ) ], 403 );
+    }
+
+    global $wpdb;
+    $tables = cpg_get_table_names();
+
+    // 2. Database Query
+    $gpts = $wpdb->get_results(
+        "SELECT id, name, description, gpt_url, prompt_template, prompt_fields FROM {$tables['gpts']} ORDER BY id DESC"
+    );
+
+    // 3. Decode JSON fields before sending
+    // The 'prompt_fields' are stored as JSON, so we decode them for JS.
+    if ( $gpts ) {
+        foreach ( $gpts as $gpt ) {
+            if ( ! empty( $gpt->prompt_fields ) ) {
+                $gpt->prompt_fields = json_decode( $gpt->prompt_fields, true );
+            } else {
+                $gpt->prompt_fields = []; // Ensure it's an array
+            }
+        }
+    }
+
+    // 4. Send Success Response
+    wp_send_json_success( [ 'gpts' => $gpts ] );
+}
+add_action( 'wp_ajax_cpg_get_gpts', 'cpg_ajax_get_gpts' );
+
+/**
+ * AJAX Handler: Save GPT (Create or Update)
+ * Saves a single GPT's data to the database.
+ */
+function cpg_ajax_save_gpt() {
+    // 1. Security Check
+    check_ajax_referer( 'cpg_admin_nonce', 'nonce' );
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Permission denied.', CPG_TEXT_DOMAIN ) ], 403 );
+    }
+
+    global $wpdb;
+    $tables = cpg_get_table_names();
+
+    // 2. Sanitize Input Data
+    // We expect the data to be posted as JSON, we decode it.
+    // Using file_get_contents is a reliable way to get raw JSON POST data.
+    $raw_data = json_decode( file_get_contents( 'php://input' ), true );
+
+    if ( ! $raw_data ) {
+        wp_send_json_error( [ 'message' => __( 'Invalid data provided.', CPG_TEXT_DOMAIN ) ], 400 );
+    }
+
+    // Sanitize each field
+    $gpt_id = isset( $raw_data['id'] ) ? absint( $raw_data['id'] ) : 0;
+    $name = isset( $raw_data['name'] ) ? sanitize_text_field( $raw_data['name'] ) : '';
+    $gpt_url = isset( $raw_data['gpt_url'] ) ? esc_url_raw( $raw_data['gpt_url'] ) : '';
+    $description = isset( $raw_data['description'] ) ? sanitize_textarea_field( $raw_data['description'] ) : '';
+    $prompt_template = isset( $raw_data['prompt_template'] ) ? sanitize_textarea_field( $raw_data['prompt_template'] ) : '';
+    
+    // Sanitize prompt_fields (which is an array of objects)
+    $prompt_fields_raw = isset( $raw_data['prompt_fields'] ) && is_array( $raw_data['prompt_fields'] ) ? $raw_data['prompt_fields'] : [];
+    $prompt_fields_sanitized = [];
+
+    foreach ( $prompt_fields_raw as $field ) {
+        if ( empty( $field['label'] ) || empty( $field['type'] ) ) {
+            continue; // Skip incomplete fields
+        }
+        $sanitized_field = [
+            'label'   => sanitize_text_field( $field['label'] ),
+            'type'    => sanitize_text_field( $field['type'] ), // e.g., 'text', 'select'
+            'options' => isset( $field['options'] ) ? sanitize_text_field( $field['options'] ) : '',
+        ];
+        // Only allow 'text' or 'select' types
+        if ( ! in_array( $sanitized_field['type'], [ 'text', 'select' ] ) ) {
+            $sanitized_field['type'] = 'text';
+        }
+        $prompt_fields_sanitized[] = $sanitized_field;
+    }
+    
+    // Convert fields array back to JSON for database storage
+    $prompt_fields_json = wp_json_encode( $prompt_fields_sanitized );
+
+    // Check for required fields
+    if ( empty( $name ) || empty( $gpt_url ) ) {
+        wp_send_json_error( [ 'message' => __( 'Name and GPT URL are required.', CPG_TEXT_DOMAIN ) ], 400 );
+    }
+
+    // 3. Prepare data for Database
+    $data = [
+        'name'            => $name,
+        'gpt_url'         => $gpt_url,
+        'description'     => $description,
+        'prompt_template' => $prompt_template,
+        'prompt_fields'   => $prompt_fields_json,
+    ];
+    $format = [ '%s', '%s', '%s', '%s', '%s' ];
+
+    // 4. Insert or Update
+    if ( $gpt_id > 0 ) {
+        // Update
+        $result = $wpdb->update(
+            $tables['gpts'],
+            $data,
+            [ 'id' => $gpt_id ], // WHERE condition
+            $format,
+            [ '%d' ] // WHERE format
+        );
+    } else {
+        // Insert
+        $data['created_at'] = current_time( 'mysql' );
+        $format[] = '%s';
+        $result = $wpdb->insert( $tables['gpts'], $data, $format );
+        if ( $result ) {
+            $gpt_id = $wpdb->insert_id; // Get the new ID
+        }
+    }
+
+    if ( $result === false ) {
+        wp_send_json_error( [ 'message' => __( 'Database error. Could not save GPT.', CPG_TEXT_DOMAIN ) ], 500 );
+    }
+
+    // 5. Send Success Response
+    // Return the saved (and sanitized) data, including the ID
+    $data['id'] = $gpt_id;
+    $data['prompt_fields'] = $prompt_fields_sanitized; // Send decoded version
+    wp_send_json_success( [ 'gpt' => $data, 'message' => __( 'GPT saved successfully.', CPG_TEXT_DOMAIN ) ] );
+}
+add_action( 'wp_ajax_cpg_save_gpt', 'cpg_ajax_save_gpt' );
+
+/**
+ * AJAX Handler: Delete GPT
+ * Deletes a GPT based on its ID.
+ */
+function cpg_ajax_delete_gpt() {
+    // 1. Security Check
+    check_ajax_referer( 'cpg_admin_nonce', 'nonce' );
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Permission denied.', CPG_TEXT_DOMAIN ) ], 403 );
+    }
+
+    global $wpdb;
+    $tables = cpg_get_table_names();
+
+    // 2. Sanitize Input
+    $gpt_id = isset( $_POST['id'] ) ? absint( $_POST['id'] ) : 0;
+
+    if ( $gpt_id <= 0 ) {
+        wp_send_json_error( [ 'message' => __( 'Invalid GPT ID.', CPG_TEXT_DOMAIN ) ], 400 );
+    }
+
+    // 3. Database Delete
+    $result = $wpdb->delete(
+        $tables['gpts'],
+        [ 'id' => $gpt_id ], // WHERE condition
+        [ '%d' ] // WHERE format
+    );
+
+    if ( $result === false ) {
+        wp_send_json_error( [ 'message' => __( 'Database error. Could not delete GPT.', CPG_TEXT_DOMAIN ) ], 500 );
+    }
+
+    // 4. Send Success Response
+    wp_send_json_success( [ 'message' => __( 'GPT deleted successfully.', CPG_TEXT_DOMAIN ) ] );
+}
+add_action( 'wp_ajax_cpg_delete_gpt', 'cpg_ajax_delete_gpt' );
+
+/**
+ * Part 5 — Public Shortcode Registration and Rendering
+ * * This part defines the shortcode [my_custom_gpts] that users
+ * can place on any page.
+ * * It fetches the GPT data and provides the HTML root container
+ * and template for the public-facing JavaScript.
+ */
+
+/**
+ * Registers the shortcode [my_custom_gpts].
+ */
+function cpg_register_shortcode() {
+    add_shortcode( 'my_custom_gpts', 'cpg_render_shortcode' );
+}
+add_action( 'init', 'cpg_register_shortcode' );
+
+/**
+ * Renders the HTML for the [my_custom_gpts] shortcode.
+ *
+ * @param array $atts Shortcode attributes.
+ * @return string The HTML output for the shortcode.
+ */
+function cpg_render_shortcode( $atts ) {
+    // Enqueue the public assets (JS and CSS) only when the shortcode is used.
+    wp_enqueue_style( 'cpg-public-style' );
+    wp_enqueue_script( 'cpg-public-script' );
+
+    // Fetch all GPTs from the database
+    global $wpdb;
+    $tables = cpg_get_table_names();
+    $gpts_data = $wpdb->get_results(
+        "SELECT name, description, gpt_url, prompt_template, prompt_fields FROM {$tables['gpts']} ORDER BY id ASC"
+    );
+
+    // Sanitize data and decode JSON fields
+    $gpts_clean = [];
+    if ( $gpts_data ) {
+        foreach ( $gpts_data as $gpt ) {
+            $clean_fields = [];
+            if ( ! empty( $gpt->prompt_fields ) ) {
+                $fields = json_decode( $gpt->prompt_fields, true );
+                if ( is_array( $fields ) ) {
+                    foreach ( $fields as $field ) {
+                        $clean_fields[] = [
+                            'label'   => esc_attr( $field['label'] ),
+                            'type'    => esc_attr( $field['type'] ),
+                            'options' => esc_attr( $field['options'] ),
+                        ];
+                    }
+                }
+            }
+
+            $gpts_clean[] = [
+                'name'            => esc_html( $gpt->name ),
+                'description'     => esc_html( $gpt->description ),
+                'gpt_url'         => esc_url( $gpt->gpt_url ),
+                'prompt_template' => esc_html( $gpt->prompt_template ),
+                'prompt_fields'   => $clean_fields,
+            ];
+        }
+    }
+
+    // Pass the clean data to our public JavaScript
+    // We do this by embedding it directly, so JS doesn't need a separate AJAX call.
+    wp_add_inline_script(
+        'cpg-public-script',
+        'const cpgGptData = ' . wp_json_encode( $gpts_clean ) . ';',
+        'before' // Add it before our script runs
+    );
+
+    // Start output buffering to capture HTML
+    ob_start();
+
+    // This is the main container for our public JavaScript app.
+    // The 'data-screen' attribute helps JS know what to render.
+    ?>
+    <div id="cpg-public-root" class="cpg-root" data-screen="loading">
+        <div class="cpg-loader"><?php _e( 'Loading Custom GPTs...', CPG_TEXT_DOMAIN ); ?></div>
+    </div>
+
+    <template id="cpg-card-template">
+        <div class="cpg-card">
+            <div class="cpg-card-header">
+                <h3 class="cpg-card-title"></h3>
+            </div>
+            <div class="cpg-card-body">
+                <p class="cpg-card-description"></p>
+                
+                <div class="cpg-prompt-builder" style="display: none;">
+                    <form class="cpg-prompt-form">
+                        <div class="cpg-prompt-fields-container">
+                            </div>
+                    </form>
+                </div>
+            </div>
+            <div class="cpg-card-footer">
+                <button class="cpg-button-secondary cpg-copy-prompt-btn" style="display: none;">
+                    <?php _e( 'Copy Prompt', CPG_TEXT_DOMAIN ); ?>
+                </button>
+                <a href="#" class="cpg-button-primary cpg-view-gpt-link" target="_blank" rel="noopener noreferrer">
+                    <?php _e( 'Go to GPT', CPG_TEXT_DOMAIN ); ?>
+                </a>
+            </div>
+        </div>
+    </template>
+    <?php
+
+    // Return the buffered HTML
+    return ob_get_clean();
+}
+
+// Note: No closing ?> tag is needed in PHP files that are purely code.
+
 
