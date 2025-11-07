@@ -1,0 +1,237 @@
+/**
+ * My Custom GPTs - Admin CSS
+ *
+ * This file styles the admin management page (add/edit/list GPTs).
+ * It uses CSS Design Tokens for colors and spacing.
+ */
+
+/* --- 1. Design Tokens (Root) --- */
+/* We scope tokens to our root element */
+.cpg-root {
+    /* Color Palette */
+    --cpg-color-primary: #8A63D2; /* Main Purple (for buttons) */
+    --cpg-color-primary-dark: #7B56BF; /* Purple (hover) */
+    --cpg-color-secondary: #FFA726; /* Main Orange (for accents, if needed) */
+    --cpg-color-text-primary: #1d2327;
+    --cpg-color-text-secondary: #50575e;
+    --cpg-color-border: #ccd0d4;
+    --cpg-color-bg: #ffffff;
+    --cpg-color-bg-light: #f6f7f7;
+    --cpg-color-error: #dc3232;
+    --cpg-color-success: #46b450;
+    --cpg-color-overlay: rgba(0, 0, 0, 0.6);
+
+    /* Spacing */
+    --cpg-spacing-xs: 4px;
+    --cpg-spacing-sm: 8px;
+    --cpg-spacing-md: 16px;
+    --cpg-spacing-lg: 24px;
+
+    /* Other */
+    --cpg-border-radius: 4px;
+    --cpg-box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* --- 2. Main Page Layout & Header --- */
+.cpg-admin-wrap {
+    margin-top: var(--cpg-spacing-lg);
+}
+
+.cpg-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: var(--cpg-spacing-md);
+    border-bottom: 1px solid var(--cpg-color-border);
+    margin-bottom: var(--cpg-spacing-md);
+    /* Remove default WP h1 margin */
+    margin-top: 0; 
+}
+
+.cpg-header h1 {
+    margin: 0;
+    padding: 0;
+    color: var(--cpg-color-text-primary);
+}
+
+.cpg-header p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--cpg-color-text-secondary);
+}
+
+/* --- 3. Custom Branded Button --- */
+/* We use our brand color for primary actions */
+.cpg-button-primary {
+    background-color: var(--cpg-color-primary) !important;
+    border-color: var(--cpg-color-primary-dark) !important;
+    color: #fff !important;
+    padding: var(--cpg-spacing-sm) var(--cpg-spacing-md);
+    height: auto;
+    line-height: 1.5;
+    text-shadow: none;
+    box-shadow: none;
+}
+
+.cpg-button-primary:hover,
+.cpg-button-primary:focus {
+    background-color: var(--cpg-color-primary-dark) !important;
+    border-color: var(--cpg-color-primary-dark) !important;
+    color: #fff !important;
+}
+
+/* --- 4. Table & List Styles --- */
+#cpg-gpts-table {
+    margin-top: var(--cpg-spacing-sm);
+}
+
+/* --- 5. Add/Edit Drawer (Form Modal) --- */
+.cpg-drawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100000; /* Above WP admin menu */
+    display: flex;
+    justify-content: flex-end; /* Slides from right */
+}
+
+.cpg-drawer-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--cpg-color-overlay);
+    /* Animation can be added here */
+}
+
+.cpg-drawer-content {
+    position: relative;
+    z-index: 100001;
+    width: 100%;
+    max-width: 600px;
+    background: var(--cpg-color-bg);
+    box-shadow: -2px 0 16px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.cpg-drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--cpg-spacing-md) var(--cpg-spacing-lg);
+    border-bottom: 1px solid var(--cpg-color-border);
+}
+
+.cpg-drawer-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--cpg-color-text-primary);
+}
+
+#cpg-close-drawer-btn {
+    color: var(--cpg-color-text-secondary);
+    text-decoration: none;
+}
+#cpg-close-drawer-btn:hover {
+    color: var(--cpg-color-primary);
+}
+
+.cpg-drawer-body {
+    padding: var(--cpg-spacing-lg);
+    overflow-y: auto;
+    flex-grow: 1; /* Makes body scrollable */
+}
+
+.cpg-drawer-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--cpg-spacing-sm);
+    padding: var(--cpg-spacing-md) var(--cpg-spacing-lg);
+    border-top: 1px solid var(--cpg-color-border);
+    background: var(--cpg-color-bg-light);
+}
+
+/* --- 6. Form Styles --- */
+.cpg-form-group {
+    margin-bottom: var(--cpg-spacing-md);
+}
+
+.cpg-form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: var(--cpg-spacing-sm);
+    color: var(--cpg-color-text-primary);
+}
+
+.cpg-form-group input.regular-text,
+.cpg-form-group input.large-text,
+.cpg-form-group textarea.large-text {
+    width: 100%;
+}
+
+.cpg-form-group .description {
+    font-size: 13px;
+    color: var(--cpg-color-text-secondary);
+    margin-top: var(--cpg-spacing-sm);
+}
+
+/* --- 7. Dynamic Prompt Fields --- */
+.cpg-prompt-field-row {
+    display: flex;
+    gap: var(--cpg-spacing-sm);
+    margin-bottom: var(--cpg-spacing-sm);
+    align-items: center;
+}
+.cpg-prompt-field-row input[type="text"] {
+    flex: 1;
+}
+/* Adjust field proportions */
+.cpg-prompt-field-row input[name*="[label]"] { flex-basis: 35%; }
+.cpg-prompt-field-row input[name*="[type]"] { flex-basis: 20%; }
+.cpg-prompt-field-row input[name*="[options]"] { flex-basis: 35%; }
+
+.cpg-prompt-field-row .cpg-remove-field-btn {
+    padding: 0 6px !important;
+    height: 30px !important;
+    line-height: 28px !important;
+    min-width: 30px !important;
+    color: var(--cpg-color-error);
+    border-color: var(--cpg-color-error);
+}
+.cpg-prompt-field-row .cpg-remove-field-btn:hover {
+    color: #fff;
+    background: var(--cpg-color-error);
+}
+
+/* --- 8. Loaders & Messages --- */
+.cpg-loader {
+    display: inline-block;
+    opacity: 0.7;
+    padding: var(--cpg-spacing-sm);
+    vertical-align: middle;
+}
+
+#cpg-list-loader {
+    padding: var(--cpg-spacing-lg);
+    text-align: center;
+    font-size: 1.1em;
+    color: var(--cpg-color-text-secondary);
+}
+
+.cpg-message {
+    margin-right: auto; /* Pushes to the left of the footer */
+    font-weight: 600;
+}
+
+.cpg-error {
+    color: var(--cpg-color-error);
+}
+
+.cpg-success {
+    color: var(--cpg-color-success);
+}
