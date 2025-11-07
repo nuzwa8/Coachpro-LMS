@@ -321,19 +321,12 @@
                 settings.url = settings.url + '?action=cpg_save_gpt&nonce=' + ssmData.nonce;
             }
         } )
-        .done( ( response ) => {
+   .done( ( response ) => {
             if ( response.success && response.data.gpt ) {
                 showFormMessage( response.data.message, false );
                 
-                // Update state and re-render list
-                const savedGpt = response.data.gpt;
-                const existingIndex = state.gpts.findIndex( g => g.id === savedGpt.id );
-                if ( existingIndex > -1 ) {
-                    state.gpts[ existingIndex ] = savedGpt; // Update
-                } else {
-                    state.gpts.unshift( savedGpt ); // Add new to top
-                }
-                renderGptList( state.gpts );
+                // New: Simply reload the full list from the server (safer)
+                loadGpts();
                 
                 // Close drawer after a short delay
                 setTimeout( () => {
@@ -341,6 +334,7 @@
                 }, 1000 );
                 
             } else {
+
                 showFormMessage( response.data.message || strings.error_general, true );
             }
         } )
