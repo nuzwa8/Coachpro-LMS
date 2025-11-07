@@ -132,8 +132,8 @@ function cpg_render_admin_page() {
     // The 'data-screen' attribute helps JS know what to render.
     echo '<div id="cpg-admin-root" class="cpg-root" data-screen="loading"></div>';
 
-    // *** YEH HISSA EHEM HAI (This part is important) ***
-    // Hum yahan PHP ko band kar ke HTML shuru kar rahe hain.
+    // This template contains the complete HTML structure for the admin page.
+    // JavaScript will clone this template to render the UI.
     ?>
     <template id="cpg-admin-template">
         <div class="cpg-admin-wrap">
@@ -193,7 +193,43 @@ function cpg_render_admin_page() {
                                 <div class="cpg-form-group">
                                     <label for="cpg-gpt-name"><?php _e( 'GPT Name', CPG_TEXT_DOMAIN ); ?></label>
                                     <input type="text" id="cpg-gpt-name" name="name" class="regular-text" required>
-                                ... (rest of the HTML template) ...
+                                </div>
+
+                                <div class="cpg-form-group">
+                                    <label for="cpg-gpt-url"><?php _e( 'GPT URL', CPG_TEXT_DOMAIN ); ?></label>
+                                    <input type="url" id="cpg-gpt-url" name="gpt_url" class="regular-text" placeholder="https://chat.openai.com/g/..." required>
+                                </div>
+
+                                <div class="cpg-form-group">
+                                    <label for="cpg-gpt-description"><?php _e( 'Description', CPG_TEXT_DOMAIN ); ?></label>
+                                    <textarea id="cpg-gpt-description" name="description" rows="3" class="large-text"></textarea>
+                                </div>
+
+                                <hr>
+                                
+                                <h3><?php _e( 'Prompt Builder', CPG_TEXT_DOMAIN ); ?></h3>
+                                <p class="description"><?php _e( 'Define fields for the user to fill out. Use these fields in your template.', CPG_TEXT_DOMAIN ); ?></p>
+                                
+                                <div class="cpg-form-group">
+                                    <label for="cpg-prompt-template"><?php _e( 'Prompt Template', CPG_TEXT_DOMAIN ); ?></label>
+                                    <textarea id="cpg-prompt-template" name="prompt_template" rows="4" class="large-text"></textarea>
+                                    <p class="description">
+                                        <?php _e( 'Example: Make a lesson plan for {Class} about {Subject}.', CPG_TEXT_DOMAIN ); ?>
+                                        <br>
+                                        <?php _e( 'Use curly braces {} to define variables from your fields below.', CPG_TEXT_DOMAIN ); ?>
+                                    </p>
+                                </div>
+
+                                <div class="cpg-form-group">
+                                    <label><?php _e( 'Prompt Fields', CPG_TEXT_DOMAIN ); ?></label>
+                                    <div id="cpg-prompt-fields-container">
+                                        </div>
+                                    <button type="button" id="cpg-add-field-btn" class="button">
+                                        <?php _e( 'Add Field', CPG_TEXT_DOMAIN ); ?>
+                                    </button>
+                                    <p id="cpg-field-info" class="description" style="display:none;">
+                                        <?php _e( 'Currently, only "text" and "select" types are supported.', CPG_TEXT_DOMAIN ); ?>
+                                    </p>
                                 </div>
 
                             </div> <footer class="cpg-drawer-footer">
@@ -207,7 +243,6 @@ function cpg_render_admin_page() {
                         </form>
                     </div> </div> </main> </div> </template>
     <?php
-    // Hum yahan HTML ko band kar ke wapas PHP shuru kar rahe hain.
 }
 
 /**
@@ -624,6 +659,4 @@ function cpg_render_shortcode( $atts ) {
     return ob_get_clean();
 }
 
-// Note: No closing ?> tag is needed in PHP files that are purely code.
-
-
+// No closing ?> tag is needed in PHP files that are purely code.
