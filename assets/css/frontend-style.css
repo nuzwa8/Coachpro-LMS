@@ -1,0 +1,240 @@
+/* 🇵🇰 CSS Phase Start: Frontend Styling 🇵🇰 */
+/* Rule 8: Scoped (.ssm), responsive, RTL friendly */
+
+/* --- Variables --- */
+:root {
+    --ssm-primary-color: #0073aa; /* WP Blue */
+    --ssm-accent-color: #005684;
+    --ssm-bg-light: #f9f9f9;
+    --ssm-text-dark: #333;
+    --ssm-spacing: 15px;
+    --ssm-border-radius: 8px;
+}
+
+/* --- Root Container --- */
+.ssm-gpt-showcase.ssm-root {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--ssm-text-dark);
+    direction: rtl; /* For RTL compatibility */
+    text-align: right;
+}
+
+/* --- Grid Layout (Rule 8: Grid) --- */
+.ssm-gpt-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--ssm-spacing);
+    margin-bottom: 30px;
+}
+
+/* --- Card Styling --- */
+.ssm-gpt-card {
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: var(--ssm-border-radius);
+    padding: var(--ssm-spacing);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.ssm-gpt-card:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    cursor: pointer;
+}
+
+.ssm-card-icon {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 10px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: var(--ssm-bg-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--ssm-primary-color);
+}
+
+.ssm-card-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ssm-card-icon .dashicons {
+    font-size: 30px;
+    color: var(--ssm-primary-color);
+}
+
+.ssm-card-title {
+    margin: 5px 0 10px 0;
+    font-size: 1.2em;
+    color: var(--ssm-accent-color);
+}
+
+.ssm-card-excerpt {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: var(--ssm-spacing);
+    flex-grow: 1;
+}
+
+.ssm-card-button {
+    background-color: var(--ssm-primary-color);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    width: 100%;
+    font-weight: bold;
+}
+
+.ssm-card-button:hover {
+    background-color: var(--ssm-accent-color);
+}
+
+/* --- Modal Overlay --- */
+.ssm-modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+    padding-top: 50px;
+}
+
+/* --- Modal Content/Box --- */
+.ssm-modal-content {
+    background-color: #fff;
+    margin: 5% auto; /* 5% from the top and centered */
+    padding: var(--ssm-spacing) * 2;
+    border: 1px solid #888;
+    width: 90%; 
+    max-width: 600px;
+    border-radius: var(--ssm-border-radius);
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Modal Header and Body --- */
+.ssm-modal-header {
+    border-bottom: 1px solid #eee;
+    margin-bottom: var(--ssm-spacing);
+    padding-bottom: var(--ssm-spacing);
+    text-align: right;
+}
+
+#ssm-modal-title {
+    color: var(--ssm-primary-color);
+    margin: 0 0 5px 0;
+}
+
+.ssm-close-button {
+    color: #aaa;
+    float: left; /* Float left for RTL close button */
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    left: 15px;
+}
+
+.ssm-close-button:hover,
+.ssm-close-button:focus {
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* --- Form Styling --- */
+.ssm-form-area h4 {
+    margin-top: 0;
+    color: var(--ssm-text-dark);
+}
+
+.ssm-prompt-builder-form label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    margin-top: 10px;
+    color: var(--ssm-accent-color);
+    text-align: right;
+}
+
+.ssm-prompt-builder-form input[type="text"],
+.ssm-prompt-builder-form input[type="number"],
+.ssm-prompt-builder-form select,
+.ssm-prompt-builder-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Crucial for padding/border within 100% width */
+    transition: border-color 0.2s;
+}
+
+.ssm-prompt-builder-form input:focus,
+.ssm-prompt-builder-form select:focus,
+.ssm-prompt-builder-form textarea:focus {
+    border-color: var(--ssm-primary-color);
+    box-shadow: 0 0 5px rgba(0, 115, 170, 0.3);
+    outline: none;
+}
+
+/* Validation Error State */
+.ssm-input-error {
+    border: 2px solid #e74c3c !important; /* Contrast (Rule 8) */
+}
+
+/* Launch Button (Rule 8: Hover States) */
+.ssm-launch-button {
+    background-color: #2ecc71; /* Green for GO/Launch */
+    color: #fff;
+    border: none;
+    padding: 15px 30px;
+    margin-top: var(--ssm-spacing);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    font-size: 1.1em;
+    font-weight: bold;
+    text-align: center;
+}
+
+.ssm-launch-button:hover {
+    background-color: #27ae60;
+}
+
+/* Accessibility Focus Ring (Rule 9) */
+.ssm-prompt-builder-form input:focus,
+.ssm-prompt-builder-form select:focus,
+.ssm-prompt-builder-form textarea:focus,
+.ssm-card-button:focus,
+.ssm-launch-button:focus {
+    outline: 2px solid orange;
+    outline-offset: 2px;
+}
+
+.ssm-feedback-message {
+    color: #3498db;
+    background-color: #ecf0f1;
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+    margin-top: 10px;
+}
+/* 🇵🇰 CSS Phase End: Frontend Styling 🇵🇰 */
