@@ -1,0 +1,21 @@
+/* 🇵🇰 CSS Phase Start: Admin Styling 🇵🇰 */
+.ssm-meta-box-container {
+    padding: 10px 0;
+}
+.ssm-meta-box-container h3 {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #0073aa;
+}
+.ssm-meta-box-container .description {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 5px;
+}
+.ssm-meta-box-container .large-text.code {
+    font-family: monospace;
+    font-size: 12px;
+}
+/* 🇵🇰 CSS Phase End: Admin Styling 🇵🇰 */
